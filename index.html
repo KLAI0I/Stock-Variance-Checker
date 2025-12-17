@@ -246,11 +246,7 @@
       color:transparent;
     }
 
-    /* Table takes the rest of the page */
-    #tableWrap{
-      flex:1;
-      min-height:260px;
-    }
+    #tableWrap{ flex:1; min-height:260px; }
     #table{
       width:100%;
       height:100%;
@@ -261,12 +257,7 @@
       background: rgba(4,17,31,.18);
     }
 
-    /* Tabulator dark (page only) */
-    .tabulator{
-      background: transparent;
-      border:none;
-      color: var(--text);
-    }
+    .tabulator{ background: transparent; border:none; color: var(--text); }
     .tabulator .tabulator-header{
       background: linear-gradient(180deg, rgba(7,27,42,.92), rgba(7,27,42,.72));
       border-bottom:1px solid rgba(255,255,255,.10);
@@ -280,12 +271,8 @@
       background: rgba(4,17,31,.10);
       border-bottom:1px solid rgba(255,255,255,.06);
     }
-    .tabulator-row:hover{
-      background: rgba(96,165,250,.10);
-    }
-    .tabulator-row .tabulator-cell{
-      border-right:1px solid rgba(255,255,255,.06);
-    }
+    .tabulator-row:hover{ background: rgba(96,165,250,.10); }
+    .tabulator-row .tabulator-cell{ border-right:1px solid rgba(255,255,255,.06); }
 
     .badge{
       display:inline-flex;
@@ -302,7 +289,6 @@
     .b-shortage{ background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.30); color:#ffb4b4; }
     .b-pending{ background: rgba(251,191,36,.14); border-color: rgba(251,191,36,.30); color:#ffe7b0; }
 
-    /* Unified variance columns background */
     .tabulator .tabulator-cell.variance-col{
       background: linear-gradient(180deg, rgba(96,165,250,.12), rgba(96,165,250,.06)) !important;
     }
@@ -326,7 +312,6 @@
       background: rgba(4,17,31,.35);
       border:1px solid rgba(255,255,255,.10);
     }
-    /* Actual - System: negative shortage (red), positive surplus (teal) */
     .vshort{ color:#ffb4b4; border-color: rgba(239,68,68,.28); }
     .vsurp{ color:#99fff1; border-color: rgba(45,212,191,.28); }
     .vzero{ color:#b6f7c9; border-color: rgba(34,197,94,.28); }
@@ -392,7 +377,9 @@
   <div class="panel">
     <div class="controls">
       <div class="field" style="min-width:320px">
-        <label for="fileInput">Upload Excel / XLS / XLSX (Required: <b>Item Name</b>, <b>PackQty</b> — Optional: <b>Pack Cost</b>, <b>Total Cost</b>)</label>
+        <label for="fileInput">
+          Upload Excel / XLS / XLSX (Required: <b>Generic Name</b> (preferred) OR <b>Item Name</b>, and <b>PackQty</b> — Optional: <b>Pack Cost</b>, <b>Total Cost</b>)
+        </label>
         <input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.htm,.html" />
         <div class="mini" id="fileLabel">No file loaded</div>
       </div>
@@ -400,14 +387,14 @@
       <div class="ctrl" style="max-width:300px">
         <label for="aggMode">Import Mode</label>
         <select id="aggMode">
-          <option value="itemname" selected>Group by Item Name (sum PackQty + sum Total Cost)</option>
+          <option value="genericname" selected>Group by Generic Name (sum PackQty + sum Total Cost)</option>
           <option value="none">No grouping (raw rows)</option>
         </select>
         <div class="mini">Grouping avoids duplicates.</div>
       </div>
 
       <div class="ctrl" style="max-width:300px">
-        <label for="searchBox">Search Item Name</label>
+        <label for="searchBox">Search Generic Name</label>
         <input id="searchBox" type="text" placeholder="Type to search..." />
         <div class="mini" id="selectedInfo">Selected: 0</div>
       </div>
@@ -466,7 +453,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const LS_KEY = "icu_stock_variance_actual_singlepage_v1";
+  const LS_KEY = "icu_stock_variance_actual_singlepage_v1"; // keep same key to preserve saved data
 
   let table = null;
   let lastLoadedFilename = "";
@@ -518,11 +505,17 @@
   function saveActualMap(map){
     localStorage.setItem(LS_KEY, JSON.stringify(map));
   }
+
+  // Use Generic Name for saving/loading; fallback to Item Name if ever needed
+  function rowKey(r){
+    return keyStr(r.genericName || r.itemName || "");
+  }
+
   function persistActualFromTable(){
     if(!table) return;
     const map = {};
     table.getData().forEach(r=>{
-      const k = keyStr(r.itemName);
+      const k = rowKey(r);
       const v = toNumber(r.actualQty);
       if(k && v !== null) map[k] = round2(v);
     });
@@ -576,7 +569,6 @@
     if(!Number.isFinite(n)) return "";
     if(Math.abs(n) < 1e-9) return `<span class="vtext vzero">✅ ${fmt2(0)}</span>`;
 
-    // negative shortage, positive surplus
     if(n < 0) return `<span class="vtext vshort">▼ ${fmt2(n)}</span>`;
     return `<span class="vtext vsurp">▲ +${fmt2(n)}</span>`;
   }
@@ -654,7 +646,7 @@
     table.clearFilter(true);
 
     if(query){
-      table.addFilter(d => String(d.itemName||"").toLowerCase().includes(query));
+      table.addFilter(d => String(d.genericName||"").toLowerCase().includes(query));
     }
 
     table.addFilter(d=>{
@@ -676,32 +668,40 @@
     for(let i=0; i<Math.min(aoa.length, 80); i++){
       const row = aoa[i] || [];
       const keys = row.map(c=>keyStr(c));
-      const hasItemName = keys.includes("itemname");
       const hasPackQty  = keys.includes("packqty");
-      if(hasItemName && hasPackQty) return i;
+      const hasGeneric  = keys.includes("genericname");
+      const hasItem     = keys.includes("itemname");
+      if(hasPackQty && (hasGeneric || hasItem)) return i;
     }
     return -1;
   }
 
-  function buildRowsFromAOA(aoa, {groupByItemName=true}){
+  function buildRowsFromAOA(aoa, {groupByGenericName=true}){
     const hdrIdx = findHeaderRow(aoa);
-    if(hdrIdx < 0) throw new Error("Headers not found. Required: 'Item Name' and 'PackQty'.");
+    if(hdrIdx < 0) throw new Error("Headers not found. Required: 'Generic Name' (preferred) or 'Item Name', and 'PackQty'.");
 
     const header = aoa[hdrIdx].map(h=>keyStr(h));
-    const idxItemName = header.indexOf("itemname");
-    const idxPackQty  = header.indexOf("packqty");
-    const idxPackCost = header.indexOf("packcost");
-    const idxTotalCost = header.indexOf("totalcost");
 
-    if(idxItemName < 0 || idxPackQty < 0) throw new Error("Cannot locate Item Name / PackQty columns.");
+    const idxGenericName = header.indexOf("genericname");
+    const idxItemName    = header.indexOf("itemname");
+    const idxPackQty     = header.indexOf("packqty");
+    const idxPackCost    = header.indexOf("packcost");
+    const idxTotalCost   = header.indexOf("totalcost");
+
+    if(idxPackQty < 0) throw new Error("Cannot locate PackQty column.");
+    if(idxGenericName < 0 && idxItemName < 0) throw new Error("Cannot locate Generic Name or Item Name column.");
 
     const saved = getSavedMap();
-
     const rawRows = [];
+
     for(let r = hdrIdx + 1; r < aoa.length; r++){
       const row = aoa[r] || [];
-      const itemName = normStr(row[idxItemName]);
-      if(!itemName) continue;
+
+      const genericRaw = (idxGenericName >= 0) ? normStr(row[idxGenericName]) : "";
+      const itemRaw    = (idxItemName >= 0) ? normStr(row[idxItemName]) : "";
+      const displayName = genericRaw || itemRaw;
+
+      if(!displayName) continue;
 
       const sysQty = toNumber(row[idxPackQty]) ?? 0;
 
@@ -711,11 +711,16 @@
       if(totalCost === null && packCost !== null) totalCost = packCost * sysQty;
       if((packCost === null || !Number.isFinite(packCost)) && totalCost !== null && sysQty > 0) packCost = totalCost / sysQty;
 
-      const k = keyStr(itemName);
-      const savedAct = (k && (k in saved)) ? saved[k] : "";
+      // saved actual by genericName key; fallback to itemName key
+      const kGeneric = keyStr(displayName);
+      const kItem    = keyStr(itemRaw);
+      const savedAct = (kGeneric && (kGeneric in saved)) ? saved[kGeneric]
+                     : (kItem && (kItem in saved)) ? saved[kItem]
+                     : "";
 
       rawRows.push({
-        itemName,
+        genericName: displayName,  // always filled (generic preferred, item fallback)
+        itemName: itemRaw,         // keep for fallback/backward compatibility
         systemQty: round2(sysQty) ?? 0,
         packCost: round2(packCost ?? 0) ?? 0,
         systemTotalCost: round2(totalCost ?? ((packCost ?? 0) * sysQty)) ?? 0,
@@ -726,24 +731,31 @@
         moneyVariance: null
       });
     }
-    if(!rawRows.length) throw new Error("No item rows found after header.");
 
-    if(!groupByItemName){
+    if(!rawRows.length) throw new Error("No rows found after header.");
+
+    if(!groupByGenericName){
       return rawRows.map((r, i)=>({ id: i+1, ...computeRow(r) }));
     }
 
-    // group by item name
+    // group by generic name
     const map = new Map();
     rawRows.forEach(r=>{
-      const k = keyStr(r.itemName);
+      const k = keyStr(r.genericName);
       if(!k) return;
+
       if(!map.has(k)){
-        map.set(k, { itemName: r.itemName, systemQty: 0, systemTotalCost: 0, actualQty: r.actualQty });
+        map.set(k, {
+          genericName: r.genericName,
+          itemName: r.itemName,
+          systemQty: 0,
+          systemTotalCost: 0,
+          actualQty: r.actualQty
+        });
       }
       const o = map.get(k);
       o.systemQty += Number(r.systemQty)||0;
       o.systemTotalCost += Number(r.systemTotalCost)||0;
-      // keep any saved actual if exists
       if(o.actualQty === "" && r.actualQty !== "") o.actualQty = r.actualQty;
     });
 
@@ -753,6 +765,7 @@
       const packCost = (qty > 0) ? (sysCost/qty) : 0;
 
       return {
+        genericName: o.genericName,
         itemName: o.itemName,
         systemQty: round2(qty) ?? 0,
         packCost: round2(packCost) ?? 0,
@@ -763,7 +776,7 @@
         actualTotalCost: null,
         moneyVariance: null
       };
-    }).sort((a,b)=> String(a.itemName).localeCompare(String(b.itemName)));
+    }).sort((a,b)=> String(a.genericName).localeCompare(String(b.genericName)));
 
     return out.map((r, i)=>({ id: i+1, ...computeRow(r) }));
   }
@@ -828,7 +841,7 @@
       columns: [
         {title:"", formatter:"rowSelection", titleFormatter:"rowSelection", hozAlign:"center", headerSort:false, width:52},
         {title:"#", field:"id", width:70, hozAlign:"center"},
-        {title:"Item Name", field:"itemName", minWidth:340},
+        {title:"Generic Name", field:"genericName", minWidth:340},
 
         {title:"System Qty (PackQty)", field:"systemQty", width:170, hozAlign:"right",
           formatter:(c)=> fmt2(Number(c.getValue()||0))
@@ -850,7 +863,6 @@
           cellEdited:(cell)=>{
             const row = cell.getRow();
             const d = row.getData();
-            // normalize to 2 decimals
             const v = toNumber(d.actualQty);
             d.actualQty = (v === null ? "" : round2(v));
             row.update(computeRow(d));
@@ -879,7 +891,7 @@
         {title:"Status", field:"status", width:160, hozAlign:"center", formatter:statusBadgeFormatter},
       ],
 
-      initialSort: [{column:"itemName", dir:"asc"}],
+      initialSort: [{column:"genericName", dir:"asc"}],
 
       rowSelectionChanged: function(){
         updateSelectedInfo();
@@ -892,7 +904,6 @@
       }
     });
 
-    // keep table height correct on resize
     window.addEventListener("resize", ()=>{
       try{ table.setHeight("calc(100vh - 340px)"); }catch(e){}
     });
@@ -942,7 +953,7 @@
     if(!table) return;
     baselineActualMap = {};
     table.getData().forEach(r=>{
-      const k = keyStr(r.itemName);
+      const k = rowKey(r);
       const v = toNumber(r.actualQty);
       baselineActualMap[k] = (v === null ? "" : round2(v));
     });
@@ -952,7 +963,7 @@
     if(!table) return;
     const data = table.getData();
     data.forEach(r=>{
-      const k = keyStr(r.itemName);
+      const k = rowKey(r);
       const base = (k in baselineActualMap) ? baselineActualMap[k] : "";
       r.actualQty = (base === "" ? "" : round2(Number(base)));
       Object.assign(r, computeRow(r));
@@ -984,7 +995,7 @@
     const data = table.getData();
     let hits = 0;
     data.forEach(r=>{
-      const k = keyStr(r.itemName);
+      const k = rowKey(r);
       if(k in saved){
         r.actualQty = round2(Number(saved[k]));
         Object.assign(r, computeRow(r));
@@ -1019,7 +1030,7 @@
 
       return {
         "#": fmt2(r.id),
-        "Item Name": r.itemName,
+        "Generic Name": r.genericName,
         "System Qty (PackQty)": fmt2(round2(sysQty)),
         "Actual Qty": actQty === null ? "" : fmt2(round2(actQty)),
         "Qty Variance (Actual-System)": qtyVar === "" ? "" : fmt2(qtyVar),
@@ -1079,7 +1090,7 @@
 
       return [
         fmt2(r.id),
-        r.itemName,
+        r.genericName,
         fmt2(round2(sysQty)),
         actQty === null ? "" : fmt2(round2(actQty)),
         qtyVar === "" ? "" : fmt2(qtyVar),
@@ -1092,7 +1103,7 @@
 
     doc.autoTable({
       startY: 23,
-      head: [[ "#", "Item Name", "SysQty", "Actual", "VarQty", "PackCost", "SysCost", "ActCost", "MoneyVar" ]],
+      head: [[ "#", "Generic Name", "SysQty", "Actual", "VarQty", "PackCost", "SysCost", "ActCost", "MoneyVar" ]],
       body,
       margin: { left: 8, right: 8, top: 8, bottom: 14 },
       styles: { fontSize: 8, cellPadding: 1.5, overflow: "linebreak", textColor: 0, lineWidth: 0.1, lineColor: [200,200,200] },
@@ -1173,8 +1184,8 @@
       lastLoadedFilename = file.name;
 
       const aoa = await parseFileToAOA(file);
-      const group = document.getElementById("aggMode").value === "itemname";
-      const rows = buildRowsFromAOA(aoa, { groupByItemName: group });
+      const group = document.getElementById("aggMode").value === "genericname";
+      const rows = buildRowsFromAOA(aoa, { groupByGenericName: group });
 
       initTable();
       table.setData(rows);
@@ -1184,7 +1195,6 @@
       updateSelectedInfo();
       updateStats();
 
-      // baseline for undo = state right after import (with any saved actual already applied)
       setBaselineFromCurrent();
 
       toast("Imported successfully.", `Items loaded: ${rows.length}`);
