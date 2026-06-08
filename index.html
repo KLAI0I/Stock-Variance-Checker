@@ -348,6 +348,106 @@
     }
     .toast.show{ opacity: 1; transform: translateY(0); }
     .toast .small{ color: var(--muted); font-size: 12px; margin-top:4px; }
+
+
+    /* --- Clean full-width dark dashboard layout with fixed sidebar --- */
+    :root{
+      --sidebar: 360px;
+      --bg0:#050814;
+      --bg1:#0b1024;
+      --panel: rgba(14, 20, 38, .86);
+      --panel2: rgba(9, 14, 28, .74);
+      --line:rgba(255,255,255,.12);
+      --orange:#fb923c;
+      --pink:#f472b6;
+      --lime:#a3e635;
+    }
+
+    body{
+      overflow:hidden;
+      background:
+        radial-gradient(900px 600px at 8% 12%, rgba(96,165,250,.16), transparent 58%),
+        radial-gradient(850px 620px at 82% 0%, rgba(244,114,182,.13), transparent 55%),
+        radial-gradient(700px 520px at 62% 92%, rgba(45,212,191,.11), transparent 55%),
+        linear-gradient(135deg, #030712 0%, #07111f 48%, #111827 100%);
+    }
+
+    header{
+      padding:14px 18px;
+      background:rgba(3,7,18,.78);
+      border-bottom:1px solid rgba(255,255,255,.14);
+    }
+    .headrow{justify-content:center; align-items:center; text-align:center; position:relative;}
+    .headrow > div:first-child{width:100%;}
+    h1{
+      justify-content:center;
+      font-size:26px;
+      font-weight:900;
+      letter-spacing:.4px;
+      text-align:center;
+      width:100%;
+      background:linear-gradient(90deg,#e7f1ff,#60a5fa,#2dd4bf,#f472b6);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .pill,.sub{display:none!important;}
+    header .btns{position:absolute; right:0; top:50%; transform:translateY(-50%);}
+
+    .wrap{
+      display:grid;
+      grid-template-columns:var(--sidebar) minmax(0,1fr);
+      gap:14px;
+      padding:14px;
+      height:calc(100vh - 64px);
+      overflow:hidden;
+    }
+    .wrap > .panel:first-child{
+      height:100%;
+      overflow:auto;
+      padding:14px;
+      border-radius:20px;
+      border:1px solid rgba(96,165,250,.18);
+      background:linear-gradient(180deg,rgba(15,23,42,.88),rgba(2,6,23,.78));
+    }
+    .wrap > .panel:first-child::after{
+      content:"Controls";
+      display:block;
+      position:absolute;
+      top:12px;
+      right:14px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.14em;
+      color:rgba(231,241,255,.44);
+      text-transform:uppercase;
+    }
+    .controls{display:flex; flex-direction:column; gap:12px; padding-top:18px;}
+    .field,.ctrl,.field[style],.ctrl[style]{min-width:0!important; max-width:none!important; width:100%; flex:none;}
+    .btns{width:100%; display:grid; grid-template-columns:1fr; gap:8px;}
+    header .btns{width:auto; display:flex;}
+    button{width:100%;}
+    header button{width:auto;}
+    .stats{display:grid; grid-template-columns:1fr; gap:8px; margin-top:14px;}
+    .stat{min-width:0; padding:10px;}
+    .stat .v{font-size:18px;}
+    .panel{border-radius:20px;}
+    #tableWrap{min-height:0; height:100%; display:flex;}
+    #table{height:100%; flex:1; border-radius:20px;}
+    .tabulator .tabulator-header .tabulator-col{font-weight:900;}
+    .tabulator-row .tabulator-cell{padding-top:9px; padding-bottom:9px;}
+    footer{display:none;}
+    .mini b,.mini{line-height:1.45;}
+
+    @media (max-width: 980px){
+      body{overflow:auto;}
+      .wrap{display:flex; flex-direction:column; height:auto; overflow:visible;}
+      .wrap > .panel:first-child{height:auto; overflow:visible;}
+      header .btns{position:static; transform:none; margin-top:10px; justify-content:center;}
+      h1{font-size:22px;}
+      #tableWrap{height:70vh; min-height:520px;}
+    }
+
   </style>
 </head>
 
@@ -355,15 +455,7 @@
 <header>
   <div class="headrow">
     <div>
-      <h1>
-        ICU Stock Variance Checker
-        <span class="pill">Qty Variance = Actual − System</span>
-        <span class="pill">Minus (−) = Shortage • Plus (+) = Surplus</span>
-        <span class="pill">All numbers = 2 decimals</span>
-      </h1>
-      <p class="sub">
-        Upload stock file → enter Actual Qty → review variance + money impact → export simple A4 PDF / Excel.
-      </p>
+      <h1>ICU Stock Variance Checker</h1>
     </div>
     <div class="btns">
       <button class="btn-ghost" id="btnLoadSaved">Load Saved Actual</button>
@@ -378,7 +470,7 @@
     <div class="controls">
       <div class="field" style="min-width:320px">
         <label for="fileInput">
-          Upload Excel / XLS / XLSX (Required: <b>Generic Name</b> (preferred) OR <b>Item Name</b>, and <b>PackQty</b> — Optional: <b>Pack Cost</b>, <b>Total Cost</b>)
+          Upload Excel / XLS / XLSX (Required: <b>Item Code</b>, <b>Item Name</b> or <b>Generic Name</b>, and <b>PackQty</b> — Optional: <b>Pack Cost</b>, <b>Total Cost</b>)
         </label>
         <input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.htm,.html" />
         <div class="mini" id="fileLabel">No file loaded</div>
@@ -387,14 +479,14 @@
       <div class="ctrl" style="max-width:300px">
         <label for="aggMode">Import Mode</label>
         <select id="aggMode">
-          <option value="genericname" selected>Group by Generic Name (sum PackQty + sum Total Cost)</option>
-          <option value="none">No grouping (raw rows)</option>
+          <option value="none" selected>No grouping — show all Item Codes</option>
+          <option value="genericname">Group by Generic Name (sum PackQty + sum Total Cost)</option>
         </select>
-        <div class="mini">Grouping avoids duplicates.</div>
+        <div class="mini">Default keeps every item code visible.</div>
       </div>
 
       <div class="ctrl" style="max-width:300px">
-        <label for="searchBox">Search Generic Name</label>
+        <label for="searchBox">Search Item Code / Name</label>
         <input id="searchBox" type="text" placeholder="Type to search..." />
         <div class="mini" id="selectedInfo">Selected: 0</div>
       </div>
@@ -506,9 +598,9 @@
     localStorage.setItem(LS_KEY, JSON.stringify(map));
   }
 
-  // Use Generic Name for saving/loading; fallback to Item Name if ever needed
+  // Use Item Code first for saving/loading; fallback to names if needed
   function rowKey(r){
-    return keyStr(r.genericName || r.itemName || "");
+    return keyStr(r.itemCode || r.genericName || r.itemName || "");
   }
 
   function persistActualFromTable(){
@@ -646,7 +738,7 @@
     table.clearFilter(true);
 
     if(query){
-      table.addFilter(d => String(d.genericName||"").toLowerCase().includes(query));
+      table.addFilter(d => `${d.itemCode||""} ${d.genericName||""} ${d.itemName||""}`.toLowerCase().includes(query));
     }
 
     table.addFilter(d=>{
@@ -671,7 +763,8 @@
       const hasPackQty  = keys.includes("packqty");
       const hasGeneric  = keys.includes("genericname");
       const hasItem     = keys.includes("itemname");
-      if(hasPackQty && (hasGeneric || hasItem)) return i;
+      const hasCode     = keys.includes("itemcode") || keys.includes("code") || keys.includes("itemid");
+      if(hasPackQty && (hasCode || hasGeneric || hasItem)) return i;
     }
     return -1;
   }
@@ -682,6 +775,7 @@
 
     const header = aoa[hdrIdx].map(h=>keyStr(h));
 
+    const idxItemCode    = ["itemcode", "code", "itemid", "itemno", "itemnumber", "productcode"].map(k=>header.indexOf(k)).find(i=>i>=0) ?? -1;
     const idxGenericName = header.indexOf("genericname");
     const idxItemName    = header.indexOf("itemname");
     const idxPackQty     = header.indexOf("packqty");
@@ -689,7 +783,7 @@
     const idxTotalCost   = header.indexOf("totalcost");
 
     if(idxPackQty < 0) throw new Error("Cannot locate PackQty column.");
-    if(idxGenericName < 0 && idxItemName < 0) throw new Error("Cannot locate Generic Name or Item Name column.");
+    if(idxItemCode < 0 && idxGenericName < 0 && idxItemName < 0) throw new Error("Cannot locate Item Code, Generic Name or Item Name column.");
 
     const saved = getSavedMap();
     const rawRows = [];
@@ -697,11 +791,12 @@
     for(let r = hdrIdx + 1; r < aoa.length; r++){
       const row = aoa[r] || [];
 
-      const genericRaw = (idxGenericName >= 0) ? normStr(row[idxGenericName]) : "";
-      const itemRaw    = (idxItemName >= 0) ? normStr(row[idxItemName]) : "";
-      const displayName = genericRaw || itemRaw;
+      const itemCodeRaw = (idxItemCode >= 0) ? normStr(row[idxItemCode]) : "";
+      const genericRaw  = (idxGenericName >= 0) ? normStr(row[idxGenericName]) : "";
+      const itemRaw     = (idxItemName >= 0) ? normStr(row[idxItemName]) : "";
+      const displayName = genericRaw || itemRaw || itemCodeRaw;
 
-      if(!displayName) continue;
+      if(!displayName && !itemCodeRaw) continue;
 
       const sysQty = toNumber(row[idxPackQty]) ?? 0;
 
@@ -711,15 +806,18 @@
       if(totalCost === null && packCost !== null) totalCost = packCost * sysQty;
       if((packCost === null || !Number.isFinite(packCost)) && totalCost !== null && sysQty > 0) packCost = totalCost / sysQty;
 
-      // saved actual by genericName key; fallback to itemName key
+      // saved actual by Item Code first; fallback to names
+      const kCode    = keyStr(itemCodeRaw);
       const kGeneric = keyStr(displayName);
       const kItem    = keyStr(itemRaw);
-      const savedAct = (kGeneric && (kGeneric in saved)) ? saved[kGeneric]
+      const savedAct = (kCode && (kCode in saved)) ? saved[kCode]
+                     : (kGeneric && (kGeneric in saved)) ? saved[kGeneric]
                      : (kItem && (kItem in saved)) ? saved[kItem]
                      : "";
 
       rawRows.push({
-        genericName: displayName,  // always filled (generic preferred, item fallback)
+        itemCode: itemCodeRaw,
+        genericName: displayName,  // always filled (generic preferred, item fallback/code fallback)
         itemName: itemRaw,         // keep for fallback/backward compatibility
         systemQty: round2(sysQty) ?? 0,
         packCost: round2(packCost ?? 0) ?? 0,
@@ -746,6 +844,7 @@
 
       if(!map.has(k)){
         map.set(k, {
+          itemCode: r.itemCode,
           genericName: r.genericName,
           itemName: r.itemName,
           systemQty: 0,
@@ -754,6 +853,9 @@
         });
       }
       const o = map.get(k);
+      if(r.itemCode && !String(o.itemCode||"").split(", ").includes(r.itemCode)){
+        o.itemCode = o.itemCode ? `${o.itemCode}, ${r.itemCode}` : r.itemCode;
+      }
       o.systemQty += Number(r.systemQty)||0;
       o.systemTotalCost += Number(r.systemTotalCost)||0;
       if(o.actualQty === "" && r.actualQty !== "") o.actualQty = r.actualQty;
@@ -765,6 +867,7 @@
       const packCost = (qty > 0) ? (sysCost/qty) : 0;
 
       return {
+        itemCode: o.itemCode || "",
         genericName: o.genericName,
         itemName: o.itemName,
         systemQty: round2(qty) ?? 0,
@@ -811,7 +914,7 @@
 
     table = new Tabulator("#table", {
       layout: "fitColumns",
-      height: "calc(100vh - 340px)",
+      height: "100%",
       placeholder: "Upload a stock file to start…",
       index: "id",
       selectable: true,
@@ -840,8 +943,9 @@
 
       columns: [
         {title:"", formatter:"rowSelection", titleFormatter:"rowSelection", hozAlign:"center", headerSort:false, width:52},
-        {title:"#", field:"id", width:70, hozAlign:"center"},
-        {title:"Generic Name", field:"genericName", minWidth:340},
+        {title:"#", field:"id", width:62, hozAlign:"center"},
+        {title:"Item Code", field:"itemCode", minWidth:150, headerFilter:"input"},
+        {title:"Item Name / Generic Name", field:"genericName", minWidth:300, headerFilter:"input"},
 
         {title:"System Qty (PackQty)", field:"systemQty", width:170, hozAlign:"right",
           formatter:(c)=> fmt2(Number(c.getValue()||0))
@@ -905,7 +1009,7 @@
     });
 
     window.addEventListener("resize", ()=>{
-      try{ table.setHeight("calc(100vh - 340px)"); }catch(e){}
+      try{ table.setHeight("100%"); }catch(e){}
     });
   }
 
@@ -1030,7 +1134,8 @@
 
       return {
         "#": fmt2(r.id),
-        "Generic Name": r.genericName,
+        "Item Code": r.itemCode || "",
+        "Item Name / Generic Name": r.genericName,
         "System Qty (PackQty)": fmt2(round2(sysQty)),
         "Actual Qty": actQty === null ? "" : fmt2(round2(actQty)),
         "Qty Variance (Actual-System)": qtyVar === "" ? "" : fmt2(qtyVar),
@@ -1044,7 +1149,7 @@
 
     const ws = XLSX.utils.json_to_sheet(out, { skipHeader:false });
     ws["!cols"] = [
-      {wch:8}, {wch:48}, {wch:18}, {wch:12}, {wch:28},
+      {wch:8}, {wch:20}, {wch:48}, {wch:18}, {wch:12}, {wch:28},
       {wch:12}, {wch:18}, {wch:16}, {wch:34}, {wch:14}
     ];
 
@@ -1090,6 +1195,7 @@
 
       return [
         fmt2(r.id),
+        r.itemCode || "",
         r.genericName,
         fmt2(round2(sysQty)),
         actQty === null ? "" : fmt2(round2(actQty)),
@@ -1103,7 +1209,7 @@
 
     doc.autoTable({
       startY: 23,
-      head: [[ "#", "Generic Name", "SysQty", "Actual", "VarQty", "PackCost", "SysCost", "ActCost", "MoneyVar" ]],
+      head: [[ "#", "Item Code", "Item Name", "SysQty", "Actual", "VarQty", "PackCost", "SysCost", "ActCost", "MoneyVar" ]],
       body,
       margin: { left: 8, right: 8, top: 8, bottom: 14 },
       styles: { fontSize: 8, cellPadding: 1.5, overflow: "linebreak", textColor: 0, lineWidth: 0.1, lineColor: [200,200,200] },
@@ -1111,14 +1217,15 @@
       alternateRowStyles: { fillColor: [252,252,252] },
       columnStyles: {
         0: { cellWidth: 8 },
-        1: { cellWidth: 64 },
-        2: { cellWidth: 14 },
+        1: { cellWidth: 24 },
+        2: { cellWidth: 48 },
         3: { cellWidth: 14 },
         4: { cellWidth: 14 },
         5: { cellWidth: 14 },
-        6: { cellWidth: 18 },
+        6: { cellWidth: 14 },
         7: { cellWidth: 18 },
-        8: { cellWidth: 20 },
+        8: { cellWidth: 18 },
+        9: { cellWidth: 18 },
       },
       didDrawPage: () => {
         const pageNumber = doc.internal.getNumberOfPages();
