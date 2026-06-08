@@ -274,6 +274,27 @@
     .tabulator-row:hover{ background: rgba(96,165,250,.10); }
     .tabulator-row .tabulator-cell{ border-right:1px solid rgba(255,255,255,.06); }
 
+    /* Compact full-width table: avoids horizontal scroll and centers cells */
+    .tabulator{ font-size:11px; width:100%; }
+    .tabulator .tabulator-tableholder{ overflow-x:hidden !important; }
+    .tabulator .tabulator-table{ width:100% !important; }
+    .tabulator .tabulator-header .tabulator-col,
+    .tabulator-row .tabulator-cell{
+      padding:4px 3px !important;
+      text-align:center !important;
+      white-space:normal !important;
+      line-height:1.25;
+    }
+    .tabulator .tabulator-header .tabulator-col .tabulator-col-content{ padding:4px 3px !important; }
+    .tabulator .tabulator-header .tabulator-col-title{
+      white-space:normal !important;
+      text-align:center;
+      font-size:10.5px;
+      line-height:1.15;
+    }
+    .tabulator-row .tabulator-cell{ font-size:11px; }
+    .badge,.vtext{ font-size:10.5px; padding:3px 6px; gap:4px; }
+
     .badge{
       display:inline-flex;
       align-items:center;
@@ -348,106 +369,6 @@
     }
     .toast.show{ opacity: 1; transform: translateY(0); }
     .toast .small{ color: var(--muted); font-size: 12px; margin-top:4px; }
-
-
-    /* --- Clean full-width dark dashboard layout with fixed sidebar --- */
-    :root{
-      --sidebar: 360px;
-      --bg0:#050814;
-      --bg1:#0b1024;
-      --panel: rgba(14, 20, 38, .86);
-      --panel2: rgba(9, 14, 28, .74);
-      --line:rgba(255,255,255,.12);
-      --orange:#fb923c;
-      --pink:#f472b6;
-      --lime:#a3e635;
-    }
-
-    body{
-      overflow:hidden;
-      background:
-        radial-gradient(900px 600px at 8% 12%, rgba(96,165,250,.16), transparent 58%),
-        radial-gradient(850px 620px at 82% 0%, rgba(244,114,182,.13), transparent 55%),
-        radial-gradient(700px 520px at 62% 92%, rgba(45,212,191,.11), transparent 55%),
-        linear-gradient(135deg, #030712 0%, #07111f 48%, #111827 100%);
-    }
-
-    header{
-      padding:14px 18px;
-      background:rgba(3,7,18,.78);
-      border-bottom:1px solid rgba(255,255,255,.14);
-    }
-    .headrow{justify-content:center; align-items:center; text-align:center; position:relative;}
-    .headrow > div:first-child{width:100%;}
-    h1{
-      justify-content:center;
-      font-size:26px;
-      font-weight:900;
-      letter-spacing:.4px;
-      text-align:center;
-      width:100%;
-      background:linear-gradient(90deg,#e7f1ff,#60a5fa,#2dd4bf,#f472b6);
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-    }
-    .pill,.sub{display:none!important;}
-    header .btns{position:absolute; right:0; top:50%; transform:translateY(-50%);}
-
-    .wrap{
-      display:grid;
-      grid-template-columns:var(--sidebar) minmax(0,1fr);
-      gap:14px;
-      padding:14px;
-      height:calc(100vh - 64px);
-      overflow:hidden;
-    }
-    .wrap > .panel:first-child{
-      height:100%;
-      overflow:auto;
-      padding:14px;
-      border-radius:20px;
-      border:1px solid rgba(96,165,250,.18);
-      background:linear-gradient(180deg,rgba(15,23,42,.88),rgba(2,6,23,.78));
-    }
-    .wrap > .panel:first-child::after{
-      content:"Controls";
-      display:block;
-      position:absolute;
-      top:12px;
-      right:14px;
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.14em;
-      color:rgba(231,241,255,.44);
-      text-transform:uppercase;
-    }
-    .controls{display:flex; flex-direction:column; gap:12px; padding-top:18px;}
-    .field,.ctrl,.field[style],.ctrl[style]{min-width:0!important; max-width:none!important; width:100%; flex:none;}
-    .btns{width:100%; display:grid; grid-template-columns:1fr; gap:8px;}
-    header .btns{width:auto; display:flex;}
-    button{width:100%;}
-    header button{width:auto;}
-    .stats{display:grid; grid-template-columns:1fr; gap:8px; margin-top:14px;}
-    .stat{min-width:0; padding:10px;}
-    .stat .v{font-size:18px;}
-    .panel{border-radius:20px;}
-    #tableWrap{min-height:0; height:100%; display:flex;}
-    #table{height:100%; flex:1; border-radius:20px;}
-    .tabulator .tabulator-header .tabulator-col{font-weight:900;}
-    .tabulator-row .tabulator-cell{padding-top:9px; padding-bottom:9px;}
-    footer{display:none;}
-    .mini b,.mini{line-height:1.45;}
-
-    @media (max-width: 980px){
-      body{overflow:auto;}
-      .wrap{display:flex; flex-direction:column; height:auto; overflow:visible;}
-      .wrap > .panel:first-child{height:auto; overflow:visible;}
-      header .btns{position:static; transform:none; margin-top:10px; justify-content:center;}
-      h1{font-size:22px;}
-      #tableWrap{height:70vh; min-height:520px;}
-    }
-
   </style>
 </head>
 
@@ -455,7 +376,15 @@
 <header>
   <div class="headrow">
     <div>
-      <h1>ICU Stock Variance Checker</h1>
+      <h1>
+        ICU Stock Variance Checker
+        <span class="pill">Qty Variance = Actual − System</span>
+        <span class="pill">Minus (−) = Shortage • Plus (+) = Surplus</span>
+        <span class="pill">All numbers = 2 decimals</span>
+      </h1>
+      <p class="sub">
+        Upload stock file → enter Actual Qty → review variance + money impact → export simple A4 PDF / Excel.
+      </p>
     </div>
     <div class="btns">
       <button class="btn-ghost" id="btnLoadSaved">Load Saved Actual</button>
@@ -470,7 +399,7 @@
     <div class="controls">
       <div class="field" style="min-width:320px">
         <label for="fileInput">
-          Upload Excel / XLS / XLSX (Required: <b>Item Code</b>, <b>Item Name</b> or <b>Generic Name</b>, and <b>PackQty</b> — Optional: <b>Pack Cost</b>, <b>Total Cost</b>)
+          Upload Excel / XLS / XLSX (Required: <b>Item Code</b> (preferred) OR <b>Generic Name / Item Name</b>, and <b>PackQty</b> — Optional: <b>Pack Cost</b>, <b>Total Cost</b>)
         </label>
         <input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.htm,.html" />
         <div class="mini" id="fileLabel">No file loaded</div>
@@ -479,14 +408,15 @@
       <div class="ctrl" style="max-width:300px">
         <label for="aggMode">Import Mode</label>
         <select id="aggMode">
-          <option value="none" selected>No grouping — show all Item Codes</option>
-          <option value="genericname">Group by Generic Name (sum PackQty + sum Total Cost)</option>
+          <option value="none" selected>No grouping (show all item codes)</option>
+          <option value="itemcode">Group by Item Code (sum PackQty + sum Total Cost)</option>
+          <option value="genericname">Group by Generic Name (old mode)</option>
         </select>
-        <div class="mini">Default keeps every item code visible.</div>
+        <div class="mini">Default shows every Item Code row.</div>
       </div>
 
       <div class="ctrl" style="max-width:300px">
-        <label for="searchBox">Search Item Code / Name</label>
+        <label for="searchBox">Search Item Code / Item Name</label>
         <input id="searchBox" type="text" placeholder="Type to search..." />
         <div class="mini" id="selectedInfo">Selected: 0</div>
       </div>
@@ -519,6 +449,8 @@
         <button id="btnExportPDF">Export PDF (A4)</button>
         <button class="btn-ghost" id="btnExportMismatchPDF">Mismatch Only PDF</button>
         <button id="btnExportExcel">Export Excel</button>
+        <button class="btn-ghost" id="btnBackupJson">Backup Saved JSON</button>
+        <button class="btn-ghost" id="btnRestoreJson">Restore JSON Backup</button>
       </div>
     </div>
 
@@ -543,6 +475,7 @@
 
 <footer>Designed by Mr. Mohamed Ghonim - ICU head Nurse</footer>
 <div class="toast" id="toast"></div>
+<input id="backupJsonInput" type="file" accept=".json,application/json" style="display:none" />
 
 <script>
   const LS_KEY = "icu_stock_variance_actual_singlepage_v1"; // keep same key to preserve saved data
@@ -598,7 +531,7 @@
     localStorage.setItem(LS_KEY, JSON.stringify(map));
   }
 
-  // Use Item Code first for saving/loading; fallback to names if needed
+  // Use Item Code for saving/loading; fallback to Generic/Item Name if ever needed
   function rowKey(r){
     return keyStr(r.itemCode || r.genericName || r.itemName || "");
   }
@@ -738,7 +671,7 @@
     table.clearFilter(true);
 
     if(query){
-      table.addFilter(d => `${d.itemCode||""} ${d.genericName||""} ${d.itemName||""}`.toLowerCase().includes(query));
+      table.addFilter(d => String(d.itemCode || d.genericName || d.itemName || "").toLowerCase().includes(query));
     }
 
     table.addFilter(d=>{
@@ -761,21 +694,25 @@
       const row = aoa[i] || [];
       const keys = row.map(c=>keyStr(c));
       const hasPackQty  = keys.includes("packqty");
+      const hasItemCode = keys.includes("itemcode") || keys.includes("itemno") || keys.includes("code") || keys.includes("itemid");
       const hasGeneric  = keys.includes("genericname");
       const hasItem     = keys.includes("itemname");
-      const hasCode     = keys.includes("itemcode") || keys.includes("code") || keys.includes("itemid");
-      if(hasPackQty && (hasCode || hasGeneric || hasItem)) return i;
+      if(hasPackQty && (hasItemCode || hasGeneric || hasItem)) return i;
     }
     return -1;
   }
 
-  function buildRowsFromAOA(aoa, {groupByGenericName=true}){
+  function buildRowsFromAOA(aoa, {groupByGenericName=false, groupByItemCode=false}){
     const hdrIdx = findHeaderRow(aoa);
-    if(hdrIdx < 0) throw new Error("Headers not found. Required: 'Generic Name' (preferred) or 'Item Name', and 'PackQty'.");
+    if(hdrIdx < 0) throw new Error("Headers not found. Required: 'Item Code' (preferred) or 'Generic Name / Item Name', and 'PackQty'.");
 
     const header = aoa[hdrIdx].map(h=>keyStr(h));
 
-    const idxItemCode    = ["itemcode", "code", "itemid", "itemno", "itemnumber", "productcode"].map(k=>header.indexOf(k)).find(i=>i>=0) ?? -1;
+    const idxItemCode    = (()=>{
+      const aliases = ["itemcode", "itemno", "code", "itemid"];
+      for(const a of aliases){ const i = header.indexOf(a); if(i >= 0) return i; }
+      return -1;
+    })();
     const idxGenericName = header.indexOf("genericname");
     const idxItemName    = header.indexOf("itemname");
     const idxPackQty     = header.indexOf("packqty");
@@ -783,7 +720,7 @@
     const idxTotalCost   = header.indexOf("totalcost");
 
     if(idxPackQty < 0) throw new Error("Cannot locate PackQty column.");
-    if(idxItemCode < 0 && idxGenericName < 0 && idxItemName < 0) throw new Error("Cannot locate Item Code, Generic Name or Item Name column.");
+    if(idxItemCode < 0 && idxGenericName < 0 && idxItemName < 0) throw new Error("Cannot locate Item Code, Generic Name, or Item Name column.");
 
     const saved = getSavedMap();
     const rawRows = [];
@@ -794,9 +731,9 @@
       const itemCodeRaw = (idxItemCode >= 0) ? normStr(row[idxItemCode]) : "";
       const genericRaw  = (idxGenericName >= 0) ? normStr(row[idxGenericName]) : "";
       const itemRaw     = (idxItemName >= 0) ? normStr(row[idxItemName]) : "";
-      const displayName = genericRaw || itemRaw || itemCodeRaw;
+      const displayName = itemCodeRaw || genericRaw || itemRaw;
 
-      if(!displayName && !itemCodeRaw) continue;
+      if(!displayName) continue;
 
       const sysQty = toNumber(row[idxPackQty]) ?? 0;
 
@@ -806,9 +743,9 @@
       if(totalCost === null && packCost !== null) totalCost = packCost * sysQty;
       if((packCost === null || !Number.isFinite(packCost)) && totalCost !== null && sysQty > 0) packCost = totalCost / sysQty;
 
-      // saved actual by Item Code first; fallback to names
+      // saved actual by itemCode key; fallback to genericName / itemName keys
       const kCode    = keyStr(itemCodeRaw);
-      const kGeneric = keyStr(displayName);
+      const kGeneric = keyStr(genericRaw);
       const kItem    = keyStr(itemRaw);
       const savedAct = (kCode && (kCode in saved)) ? saved[kCode]
                      : (kGeneric && (kGeneric in saved)) ? saved[kGeneric]
@@ -816,8 +753,8 @@
                      : "";
 
       rawRows.push({
-        itemCode: itemCodeRaw,
-        genericName: displayName,  // always filled (generic preferred, item fallback/code fallback)
+        itemCode: itemCodeRaw || displayName,
+        genericName: genericRaw || itemRaw || itemCodeRaw,
         itemName: itemRaw,         // keep for fallback/backward compatibility
         systemQty: round2(sysQty) ?? 0,
         packCost: round2(packCost ?? 0) ?? 0,
@@ -831,6 +768,46 @@
     }
 
     if(!rawRows.length) throw new Error("No rows found after header.");
+
+    if(groupByItemCode){
+      const map = new Map();
+      rawRows.forEach(r=>{
+        const k = keyStr(r.itemCode);
+        if(!k) return;
+        if(!map.has(k)){
+          map.set(k, {
+            itemCode: r.itemCode,
+            genericName: r.genericName,
+            itemName: r.itemName,
+            systemQty: 0,
+            systemTotalCost: 0,
+            actualQty: r.actualQty
+          });
+        }
+        const o = map.get(k);
+        o.systemQty += Number(r.systemQty)||0;
+        o.systemTotalCost += Number(r.systemTotalCost)||0;
+        if(o.actualQty === "" && r.actualQty !== "") o.actualQty = r.actualQty;
+      });
+      return Array.from(map.values()).map(o=>{
+        const qty = Number(o.systemQty)||0;
+        const sysCost = Number(o.systemTotalCost)||0;
+        const packCost = (qty > 0) ? (sysCost/qty) : 0;
+        return {
+          itemCode: o.itemCode,
+          genericName: o.genericName,
+          itemName: o.itemName,
+          systemQty: round2(qty) ?? 0,
+          packCost: round2(packCost) ?? 0,
+          systemTotalCost: round2(sysCost) ?? 0,
+          actualQty: o.actualQty === "" ? "" : round2(Number(o.actualQty)),
+          variance: null,
+          status: "Not counted",
+          actualTotalCost: null,
+          moneyVariance: null
+        };
+      }).sort((a,b)=> String(a.itemCode).localeCompare(String(b.itemCode))).map((r, i)=>({ id: i+1, ...computeRow(r) }));
+    }
 
     if(!groupByGenericName){
       return rawRows.map((r, i)=>({ id: i+1, ...computeRow(r) }));
@@ -853,9 +830,6 @@
         });
       }
       const o = map.get(k);
-      if(r.itemCode && !String(o.itemCode||"").split(", ").includes(r.itemCode)){
-        o.itemCode = o.itemCode ? `${o.itemCode}, ${r.itemCode}` : r.itemCode;
-      }
       o.systemQty += Number(r.systemQty)||0;
       o.systemTotalCost += Number(r.systemTotalCost)||0;
       if(o.actualQty === "" && r.actualQty !== "") o.actualQty = r.actualQty;
@@ -867,7 +841,7 @@
       const packCost = (qty > 0) ? (sysCost/qty) : 0;
 
       return {
-        itemCode: o.itemCode || "",
+        itemCode: o.itemCode,
         genericName: o.genericName,
         itemName: o.itemName,
         systemQty: round2(qty) ?? 0,
@@ -914,7 +888,7 @@
 
     table = new Tabulator("#table", {
       layout: "fitColumns",
-      height: "100%",
+      height: "calc(100vh - 340px)",
       placeholder: "Upload a stock file to start…",
       index: "id",
       selectable: true,
@@ -941,23 +915,31 @@
         }
       },
 
+      columnDefaults: {
+        hozAlign: "center",
+        headerHozAlign: "center",
+        vertAlign: "middle",
+        resizable: false,
+        headerWordWrap: true,
+        minWidth: 44,
+      },
+
       columns: [
-        {title:"", formatter:"rowSelection", titleFormatter:"rowSelection", hozAlign:"center", headerSort:false, width:52},
-        {title:"#", field:"id", width:62, hozAlign:"center"},
-        {title:"Item Code", field:"itemCode", minWidth:150, headerFilter:"input"},
-        {title:"Item Name / Generic Name", field:"genericName", minWidth:300, headerFilter:"input"},
+        {title:"", formatter:"rowSelection", titleFormatter:"rowSelection", headerSort:false, width:34, minWidth:34},
+        {title:"Item Code", field:"itemCode", widthGrow:1.2, minWidth:80},
+        {title:"Item Name", field:"itemName", widthGrow:1.8, minWidth:110, formatter:(c)=> c.getValue() || c.getRow().getData().genericName || ""},
 
-        {title:"System Qty (PackQty)", field:"systemQty", width:170, hozAlign:"right",
+        {title:"System Qty", field:"systemQty", widthGrow:.75, minWidth:68,
           formatter:(c)=> fmt2(Number(c.getValue()||0))
         },
-        {title:"Pack Cost", field:"packCost", width:130, hozAlign:"right",
+        {title:"Pack Cost", field:"packCost", widthGrow:.7, minWidth:62,
           formatter:(c)=> fmt2(Number(c.getValue()||0))
         },
-        {title:"System Cost (Total)", field:"systemTotalCost", width:170, hozAlign:"right",
+        {title:"System Cost", field:"systemTotalCost", widthGrow:.8, minWidth:72,
           formatter:(c)=> fmt2(Number(c.getValue()||0))
         },
 
-        {title:"Actual Qty", field:"actualQty", width:140, hozAlign:"right",
+        {title:"Actual Qty", field:"actualQty", widthGrow:.75, minWidth:68,
           editor:"number",
           editorParams:{min:0, step:0.01},
           formatter:(c)=>{
@@ -975,7 +957,7 @@
           }
         },
 
-        {title:"Actual Cost", field:"actualTotalCost", width:160, hozAlign:"right",
+        {title:"Actual Cost", field:"actualTotalCost", widthGrow:.8, minWidth:70,
           formatter:(c)=>{
             const d = c.getRow().getData();
             const act = toNumber(d.actualQty);
@@ -984,18 +966,18 @@
           }
         },
 
-        {title:"Qty Variance (Actual − System)", field:"variance", width:240, hozAlign:"center",
+        {title:"Qty Variance", field:"variance", widthGrow:.9, minWidth:84,
           formatter:varianceFormatter, cssClass:"variance-col"
         },
 
-        {title:"Money Variance (ActualCost − SystemCost)", field:"moneyVariance", width:280, hozAlign:"center",
+        {title:"Money Variance", field:"moneyVariance", widthGrow:1, minWidth:92,
           formatter:moneyVarianceFormatter, cssClass:"money-col"
         },
 
-        {title:"Status", field:"status", width:160, hozAlign:"center", formatter:statusBadgeFormatter},
+        {title:"Status", field:"status", widthGrow:.8, minWidth:78, formatter:statusBadgeFormatter},
       ],
 
-      initialSort: [{column:"genericName", dir:"asc"}],
+      initialSort: [{column:"itemCode", dir:"asc"}],
 
       rowSelectionChanged: function(){
         updateSelectedInfo();
@@ -1009,7 +991,7 @@
     });
 
     window.addEventListener("resize", ()=>{
-      try{ table.setHeight("100%"); }catch(e){}
+      try{ table.setHeight("calc(100vh - 340px)"); }catch(e){}
     });
   }
 
@@ -1118,6 +1100,78 @@
     return table.getRows("active").map(r=>r.getData());
   }
 
+  function downloadJsonFile(obj, filename){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function backupSavedJson(){
+    const saved = getSavedMap();
+    const entriesCount = Object.keys(saved).length;
+
+    if(!entriesCount){
+      toast("No saved inputs to backup.", "Enter Actual Qty values first, then export the JSON backup.");
+      return;
+    }
+
+    const backup = {
+      app: "ICU Stock Variance Checker",
+      backupType: "saved_actual_qty",
+      version: 1,
+      savedAt: new Date().toISOString(),
+      sourceFile: lastLoadedFilename || "",
+      keyMode: "itemCode_fallback_genericName_itemName",
+      localStorageKey: LS_KEY,
+      entries: saved
+    };
+
+    const fname = `ICU_Stock_Actual_Backup_${new Date().toISOString().slice(0,10)}.json`;
+    downloadJsonFile(backup, fname);
+    toast("JSON backup created.", `${entriesCount} saved Actual Qty value(s) exported.`);
+  }
+
+  function restoreSavedJsonFile(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const parsed = JSON.parse(String(reader.result || "{}"));
+        const entries = parsed.entries && typeof parsed.entries === "object" ? parsed.entries : parsed;
+
+        if(!entries || typeof entries !== "object" || Array.isArray(entries)){
+          throw new Error("Invalid backup format.");
+        }
+
+        const clean = {};
+        Object.entries(entries).forEach(([k, v])=>{
+          const key = keyStr(k);
+          const num = toNumber(v);
+          if(key && num !== null) clean[key] = round2(num);
+        });
+
+        if(!Object.keys(clean).length){
+          throw new Error("No valid Actual Qty entries found in this JSON file.");
+        }
+
+        saveActualMap(clean);
+        toast("JSON backup restored.", `${Object.keys(clean).length} saved value(s) imported. Click Load Saved Actual to apply them.`);
+      }catch(err){
+        console.error(err);
+        toast("Restore failed.", String(err?.message || err));
+      }finally{
+        document.getElementById("backupJsonInput").value = "";
+      }
+    };
+    reader.onerror = () => toast("Restore failed.", "Could not read the JSON file.");
+    reader.readAsText(file);
+  }
+
   function exportExcel(){
     const data = getActiveData();
     if(!data.length){ toast("Nothing to export."); return; }
@@ -1133,9 +1187,8 @@
       const moneyVar = (actQty === null) ? "" : round2(actCost - sysCost);
 
       return {
-        "#": fmt2(r.id),
-        "Item Code": r.itemCode || "",
-        "Item Name / Generic Name": r.genericName,
+        "Item Code": r.itemCode || r.genericName || r.itemName || "",
+        "Item Name": r.itemName || r.genericName || "",
         "System Qty (PackQty)": fmt2(round2(sysQty)),
         "Actual Qty": actQty === null ? "" : fmt2(round2(actQty)),
         "Qty Variance (Actual-System)": qtyVar === "" ? "" : fmt2(qtyVar),
@@ -1149,8 +1202,8 @@
 
     const ws = XLSX.utils.json_to_sheet(out, { skipHeader:false });
     ws["!cols"] = [
-      {wch:8}, {wch:20}, {wch:48}, {wch:18}, {wch:12}, {wch:28},
-      {wch:12}, {wch:18}, {wch:16}, {wch:34}, {wch:14}
+      {wch:22}, {wch:34}, {wch:14}, {wch:12}, {wch:24},
+      {wch:12}, {wch:18}, {wch:16}, {wch:28}, {wch:14}
     ];
 
     const wb = XLSX.utils.book_new();
@@ -1165,7 +1218,7 @@
     if(!data.length){ toast("Nothing to export."); return; }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation:"p", unit:"mm", format:"a4" });
+    const doc = new jsPDF({ orientation:"l", unit:"mm", format:"a4" });
 
     const pageWidth  = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -1194,9 +1247,8 @@
       const moneyVar = (actQty === null) ? "" : round2(actCost - sysCost);
 
       return [
-        fmt2(r.id),
-        r.itemCode || "",
-        r.genericName,
+        (r.itemCode || r.genericName || r.itemName || ""),
+        (r.itemName || r.genericName || ""),
         fmt2(round2(sysQty)),
         actQty === null ? "" : fmt2(round2(actQty)),
         qtyVar === "" ? "" : fmt2(qtyVar),
@@ -1209,23 +1261,22 @@
 
     doc.autoTable({
       startY: 23,
-      head: [[ "#", "Item Code", "Item Name", "SysQty", "Actual", "VarQty", "PackCost", "SysCost", "ActCost", "MoneyVar" ]],
+      head: [[ "Item Code", "Item Name", "SysQty", "Actual", "VarQty", "PackCost", "SysCost", "ActCost", "MoneyVar" ]],
       body,
       margin: { left: 8, right: 8, top: 8, bottom: 14 },
-      styles: { fontSize: 8, cellPadding: 1.5, overflow: "linebreak", textColor: 0, lineWidth: 0.1, lineColor: [200,200,200] },
+      styles: { fontSize: 8, cellPadding: 1.5, overflow: "linebreak", textColor: 0, lineWidth: 0.1, lineColor: [200,200,200], halign:"center", valign:"middle" },
       headStyles: { fillColor: [245,245,245], textColor: 0, fontStyle: "bold", lineWidth: 0.1, lineColor: [200,200,200] },
       alternateRowStyles: { fillColor: [252,252,252] },
       columnStyles: {
-        0: { cellWidth: 8 },
-        1: { cellWidth: 24 },
-        2: { cellWidth: 48 },
-        3: { cellWidth: 14 },
-        4: { cellWidth: 14 },
-        5: { cellWidth: 14 },
-        6: { cellWidth: 14 },
-        7: { cellWidth: 18 },
-        8: { cellWidth: 18 },
-        9: { cellWidth: 18 },
+        0: { cellWidth: 42, halign:"center" },
+        1: { cellWidth: 70, halign:"center" },
+        2: { cellWidth: 20, halign:"center" },
+        3: { cellWidth: 20, halign:"center" },
+        4: { cellWidth: 20, halign:"center" },
+        5: { cellWidth: 22, halign:"center" },
+        6: { cellWidth: 26, halign:"center" },
+        7: { cellWidth: 24, halign:"center" },
+        8: { cellWidth: 28, halign:"center" },
       },
       didDrawPage: () => {
         const pageNumber = doc.internal.getNumberOfPages();
@@ -1274,6 +1325,15 @@
   document.getElementById("btnExportPDF").addEventListener("click", exportPDF_All);
   document.getElementById("btnExportMismatchPDF").addEventListener("click", exportPDF_MismatchOnly);
 
+  document.getElementById("btnBackupJson").addEventListener("click", backupSavedJson);
+  document.getElementById("btnRestoreJson").addEventListener("click", ()=>{
+    document.getElementById("backupJsonInput").click();
+  });
+  document.getElementById("backupJsonInput").addEventListener("change", (e)=>{
+    const file = e.target.files?.[0];
+    if(file) restoreSavedJsonFile(file);
+  });
+
   document.getElementById("btnClearTable").addEventListener("click", clearTable);
 
   document.getElementById("btnLoadSaved").addEventListener("click", loadSavedActual);
@@ -1291,8 +1351,8 @@
       lastLoadedFilename = file.name;
 
       const aoa = await parseFileToAOA(file);
-      const group = document.getElementById("aggMode").value === "genericname";
-      const rows = buildRowsFromAOA(aoa, { groupByGenericName: group });
+      const mode = document.getElementById("aggMode").value;
+      const rows = buildRowsFromAOA(aoa, { groupByGenericName: mode === "genericname", groupByItemCode: mode === "itemcode" });
 
       initTable();
       table.setData(rows);
